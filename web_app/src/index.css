@@ -1,0 +1,181 @@
+/*
+ * Copyright 2025 Suvink
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  background-color: #0f172a;
+  /* Slate 900 */
+  color: #f8fafc;
+  /* Slate 50 */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* 3D Perspective System */
+  --perspective: 1200px;
+  --perspective-origin: center center;
+  
+  /* Glass Effect Variables — 12px blur reads nearly identically to 24px
+     but costs a quarter of the GPU time per composited surface */
+  --glass-bg: rgba(24, 24, 27, 0.4);
+  --glass-border: rgba(63, 63, 70, 0.3);
+  --glass-blur: 12px;
+  
+  /* Depth Layers */
+  --z-base: 0px;
+  --z-canvas: 20px;
+  --z-controls: 40px;
+  --z-modal: 60px;
+  
+  /* Shadow System */
+  --shadow-glow: 0 0 20px rgba(132, 204, 22, 0.1);
+  --shadow-depth: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  /* Static gradient: the old 15s background-position animation forced
+     continuous full-screen repaints for a barely-visible effect. */
+  background: linear-gradient(135deg, #0a0f1a 0%, #0f172a 30%, #1e293b 50%, #0f172a 70%, #0a0f1a 100%);
+  background-attachment: fixed;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    background-size: 200% 200%;
+    animation: gradient 15s ease infinite;
+  }
+
+  @keyframes gradient {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Glass utility classes */
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+  }
+  
+  .glass-strong {
+    background: rgba(24, 24, 27, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(63, 63, 70, 0.5);
+  }
+  
+  .perspective-container {
+    perspective: var(--perspective);
+    perspective-origin: var(--perspective-origin);
+  }
+  
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow), var(--shadow-depth);
+  }
+  
+  .shadow-glow-strong {
+    box-shadow: 0 0 30px rgba(132, 204, 22, 0.2), var(--shadow-elevated);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes slideInToast {
+  from {
+    transform: translateX(100%) translateZ(var(--z-modal)) rotateY(15deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateZ(var(--z-modal)) rotateY(0);
+    opacity: 1;
+  }
+}
+
+/* Performance: blanket will-change on every glass surface created dozens of
+   permanent composited layers. The browser promotes layers on demand during
+   the transform transition — removing this frees that memory and speeds up
+   initial paint. */
+
+/* Ripple effect for clicks */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(132, 204, 22, 0.3);
+  width: 20px;
+  height: 20px;
+  animation: ripple 0.6s ease-out;
+  pointer-events: none;
+}
